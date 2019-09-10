@@ -403,6 +403,8 @@ add_library(teem ${Teem_SOURCES})
 # RPATH stuff, and mac will ingore the INSTALL_RPATH.  Make sure for
 # macs to set BUILD_WITH_INSTALL_RPATH OFF and set INSTALL_NAME_DIR.
 # I belive INSTALL_NAME_DIR will be ignored on linux.
+
+if(NOT TEEM_LIB_INSTALL_DIR)
 set_target_properties(teem PROPERTIES
   BUILD_WITH_INSTALL_RPATH OFF
   INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib
@@ -410,6 +412,15 @@ set_target_properties(teem PROPERTIES
   SOVERSION 1
   VERSION ${Teem_VERSION_STRING}
   )
+else()
+set_target_properties(teem PROPERTIES
+  BUILD_WITH_INSTALL_RPATH OFF
+  INSTALL_RPATH ${TEEM_LIB_INSTALL_DIR}
+  INSTALL_NAME_DIR ${TEEM_LIB_INSTALL_DIR}
+  SOVERSION 1
+  VERSION ${Teem_VERSION_STRING}
+  )
+endif()
 
 if(Teem_BZIP2_LIB)
   target_link_libraries(teem ${Teem_BZIP2_LIB})
@@ -444,11 +455,19 @@ else()
   set(EXTRA_INSTALL_PATH "")
 endif()
 
+if(NOT TEEM_LIB_INSTALL_DIR)
 install(TARGETS teem
   RUNTIME DESTINATION bin COMPONENT RuntimeLibraries
   LIBRARY DESTINATION lib${EXTRA_INSTALL_PATH} COMPONENT RuntimeLibraries
   ARCHIVE DESTINATION lib${EXTRA_INSTALL_PATH} COMPONENT Development
   )
+else()
+install(TARGETS teem
+  RUNTIME DESTINATION bin COMPONENT RuntimeLibraries
+  LIBRARY DESTINATION ${TEEM_LIB_INSTALL_DIR}${EXTRA_INSTALL_PATH} COMPONENT RuntimeLibraries
+  ARCHIVE DESTINATION ${TEEM_LIB_INSTALL_DIR}{EXTRA_INSTALL_PATH} COMPONENT Development
+  )
+endif()
 
 export(TARGETS teem FILE ${Teem_BINARY_DIR}/TeemLibraryDepends.cmake)
 
@@ -552,6 +571,7 @@ install(FILES ${Teem_INSTALLED_HEADER_FILES}
   COMPONENT Development
   )
 
+if(NOT TEEM_LIB_INSTALL_DIR)
 install(FILES
   "${Teem_BINARY_DIR}/CMake/TeemConfig.cmake"
   "${Teem_SOURCE_DIR}/CMake/TeemUse.cmake"
@@ -560,3 +580,13 @@ install(FILES
   DESTINATION lib${EXTRA_INSTALL_PATH}
   COMPONENT Development
   )
+else()
+install(FILES
+  "${Teem_BINARY_DIR}/CMake/TeemConfig.cmake"
+  "${Teem_SOURCE_DIR}/CMake/TeemUse.cmake"
+  "${Teem_BINARY_DIR}/TeemBuildSettings.cmake"
+  "${Teem_BINARY_DIR}/TeemLibraryDepends.cmake"
+  DESTINATION ${TEEM_LIB_INSTALL_DIR}${EXTRA_INSTALL_PATH}
+  COMPONENT Development
+  )
+endif()
